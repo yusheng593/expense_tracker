@@ -25,16 +25,60 @@ class _ExpensesState extends State<Expenses> {
       category: Category.leisure,
     ),
   ];
+  // final List<Expense> _registeredExpenses = [];
+
+  _addExpense(Expense expense) {
+    setState(() {
+      _registeredExpenses.add(expense);
+    });
+  }
+
+  _removeExpense(Expense expense) {
+    // 取出 index，用來指定恢復被刪除的資料位置
+    // 必須要在刪除前取出，否則會變 -1
+    final expenseIndex = _registeredExpenses.indexOf(expense);
+    setState(() {
+      _registeredExpenses.remove(expense);
+    });
+
+    // 先清除目前畫面上的 SnackBars
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        content: const Text('刪除消費紀錄中'),
+        action: SnackBarAction(
+            label: '復原',
+            onPressed: () {
+              setState(() {
+                _registeredExpenses.insert(expenseIndex, expense);
+              });
+            }),
+      ),
+    );
+  }
 
   void _openAddExpenseOverLay() {
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
-      builder: (ctx) => const NewExpense(),
+      builder: (ctx) => NewExpense(
+        onAddExpense: _addExpense,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget mainContent = const Center(
+      child: Text('這裡空空的～'),
+    );
+    if (_registeredExpenses.isNotEmpty) {
+      mainContent = ExpensesList(
+        expenses: _registeredExpenses,
+        onRemoveExpense: _removeExpense,
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('該記帳啦'),
@@ -49,7 +93,7 @@ class _ExpensesState extends State<Expenses> {
         children: [
           const Text('the char'),
           Expanded(
-            child: ExpensesList(expenses: _registeredExpenses),
+            child: mainContent,
           )
         ],
       ),

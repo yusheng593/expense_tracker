@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/models/expense.dart';
 
 class NewExpense extends StatefulWidget {
-  const NewExpense({super.key});
+  const NewExpense({super.key, required this.onAddExpense});
+
+  final void Function(Expense expense) onAddExpense;
 
   @override
   State<NewExpense> createState() => _NewExpenseState();
@@ -26,6 +28,42 @@ class _NewExpenseState extends State<NewExpense> {
     });
   }
 
+  void _submitExpenseData() {
+    // tryParse('hello') => null, tryParse('12.34') => 12.34
+    final enteredAmount = double.tryParse(_amountController.text);
+    final amountIsInvalid = enteredAmount == null || enteredAmount <= 0;
+
+    if (_titleController.text.trim().isEmpty ||
+        amountIsInvalid ||
+        _selectedDate == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('輸入錯誤'),
+          content: const Text('請確認每項皆有輸入'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    } else {
+      Expense expense = Expense(
+          title: _titleController.text,
+          amount: enteredAmount,
+          date: _selectedDate ?? DateTime.now(),
+          category: _selectedCategory);
+
+      widget.onAddExpense(expense);
+      Navigator.pop(context);
+    }
+  }
+
   @override
   void dispose() {
     // 當這個 widget 被銷毀時，記得清理控制器
@@ -37,7 +75,7 @@ class _NewExpenseState extends State<NewExpense> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 48, 16, 0),
       child: Column(
         children: [
           TextField(
@@ -123,7 +161,7 @@ class _NewExpenseState extends State<NewExpense> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  print('${_titleController.text}==${_amountController.text}');
+                  _submitExpenseData();
                 },
                 child: const Text(
                   '儲存',
