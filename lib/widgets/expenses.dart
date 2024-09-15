@@ -84,6 +84,7 @@ class _ExpensesState extends State<Expenses> {
     }
     return Scaffold(
       appBar: AppBar(
+        // centerTitle: false,
         title: const Text('該記帳啦'),
         actions: [
           IconButton(
